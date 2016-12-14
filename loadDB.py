@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from Bio import Medline
 import logging
 import os,sys
-
+from datetime import date
 
 ######################################
 # Updates August 13,2016 LOADING
@@ -37,7 +37,6 @@ def updateDBdata(cancer):
 		collection = db.pancreaticcancer
 		dir = "./records/panc/"
 	for f in os.listdir(dir):
-		print f
 		handle = open(dir + f,'r')
 		records = Entrez.parse(handle)	
 		for x in records:	
@@ -62,14 +61,19 @@ def updateDBdata(cancer):
 			except Exception,e:
 				continue
 	        handle.close()
+		os.remove(f)
 	client.close()
 
-
-		
-	
 def main():
 	updateDBdata("pancreatic")
-	
+	updateDBdata("bladder")
+	updateDBdata("colon")
+	updateDBdata("lung")
+	updateDBdata("prostate")
+	stamp = date.today().isoformat()
+	handle = open('data/log.txt','w')
+	handle.write(stamp)
+
 	
 
 if __name__ == "__main__":

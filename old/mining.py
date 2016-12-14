@@ -1,59 +1,12 @@
 import re, csv,string
 from pymongo import MongoClient
-from multiprocessing import Pool
-
-class geneMatrix:
-
-	def __init__(self):
-		self.matrix = [[ x for x in range(11)] for x in range(39799)]
-		self.matrix[0][0] = "GeneSymbol"
-    		self.matrix[0][1] = "BladderCancer"
-   		self.matrix[0][2] = "LungCancer"
-    		self.matrix[0][3] = "ProstateCancer"
-    		self.matrix[0][4] = "ColonCancer"
-    		self.matrix[0][5] = "PancreaticCancer"
-    		self.matrix[0][6] = "BladderArticles"
-    		self.matrix[0][7] = "LungArticles"
-    		self.matrix[0][8] = "ProstateArticles"
-    		self.matrix[0][9] = "ColonArticles"
-    		self.matrix[0][10] = "PancArticles"
-		self.counter = 0		
-		self.row_find = {}
-
-	def setMatrix(self,lib,num,article):
-		self.counter = self.counter + 1
-		if(self.counter == 1):
-			count = 0
-			for key, value in lib.iteritems():
-		        	count = count + 1
-		      		self.row_find[key] = count  
-		      		if(value[0] >= 1): 
-					self.matrix[count][0] = key
-					self.matrix[count][num] = value[0]
-					self.matrix[count][article] =",".join(value[1:])
-		      		else:
-					self.matrix[count][0] = key
-					self.matrix[count][num] = 0
-					self.matrix[count][article] = "NA"
-		else:
-			for key, value in lib.iteritems():
-				count = self.row_find[key]
-				if(value[0] >=1):
-					self.matrix[count][num] = value[0]
-					self.matrix[count][article] = ",".join(value[1:])
-				else:
-					self.matrix[count][num] = 0
-					self.matrix[count][article] = "NA"
-
- 
 def connectDB():
     client = MongoClient('mongodb://localhost:27017/')
     db = client['minepm']
     return db
 
 
-def extractGeneData(cancer):
-    gene_dict = reset_dict() 
+def extractGeneData(cancer,gene_dict):
     #open db connection,get the cancer collection
     #loop through collection
     #Do original analysis
@@ -71,8 +24,8 @@ def extractGeneData(cancer):
         collection = db.coloncancer.find()
     elif(cancer == "pancreatic"):
         collection = db.pancreaticcancer.find()
-    for x in collection: 
-    	abst =  x['ab']
+    for x in collection:
+        abst =  x['ab']
         abst = abst.split(" ")
         abst = map(lambda s: s.encode('ascii','ignore').upper(),abst)
         abst = map(lambda s: s.strip(string.punctuation),abst)
@@ -138,32 +91,91 @@ def readcsv():
                 db.genes.update({'gene':row[0]},{'$set':{'bcid':row[6],'lcid':row[7],'pcid':row[8],'ccid':row[9],'pncid':row[10]}})
             else:
                 continue
-					
+			#row[0] is gene symbol
+			#row[6] is bladder cancer
+			#row[7] is lung cancer
+			#row[8] is prostate cancer
+			#row[9] is colon
+			#row[10] is pancreatic cancer
+			# Get the connection and 		
 
 
 def main():
-    print "Gathering data and performing analysis...please wait"
+    # Define Matrix (col)(row)
+    #39825
+    Matrix = [[ x for x in range(11)] for x in range(39799)]
+    Matrix[0][0] = "GeneSymbol"
+    Matrix[0][1] = "BladderCancer"
+    Matrix[0][2] = "LungCancer"
+    Matrix[0][3] = "ProstateCancer"
+    Matrix[0][4] = "ColonCancer"
+    Matrix[0][5] = "PancreaticCancer"
+    Matrix[0][6] = "BladderArticles"
+    Matrix[0][7] = "LungArticles"
+    Matrix[0][8] = "ProstateArticles"
+    Matrix[0][9] = "ColonArticles"
+    Matrix[0][10] = "PancArticles"
+    print "Gather data and performing analysis...please wait"
     #For each cancer type find genes, add to the matrix
-
-    # list bladder,lung,prostate,colon,pancreatic
-    # make a thread pool
-    # for cancer create a threader and call extract gene data
-    # when one returns, inset into the matrix.
-    miner = geneMatrix()
-    miner.row_find = row_find_init()	#gene dictionairy for row position
-    pool = Pool(processes = 5)
-    cancers = ["bladder","lung","prostate","colon","pancreatic"]
-    result = pool.map(extractGeneData,cancers)
-    pool.close()
-    print "Setting Matrix, Writing Matrix"
-    miner.setMatrix(result[0],1,6)
-    miner.setMatrix(result[1],2,7)
-    miner.setMatrix(result[2],3,8)
-    miner.setMatrix(result[3],4,9)
-    miner.setMatrix(result[4],5,10) 
-    writecsv(miner.matrix) # write the result of the genes vs types matrix
+    gene_dict = reset_dict() # gene dictionary for ids
+    row_find = row_find_init()	#gene dictionary for row positioni	
+    bladder = extractGeneData("bladder",gene_dict)  
+    count = 0
+    for key, value in bladder.iteritems():
+      count = count + 1
+      row_find[key] = count  
+      if(value[0] >= 1): 
+        Matrix[count][0] = key
+        Matrix[count][1] = value[0]
+        Matrix[count][6] =",".join(value[1:])
+      else:
+        Matrix[count][0] = key
+        Matrix[count][1] = 0
+        Matrix[count][6] = "NA"
+    
+    gene_dict = reset_dict()
+    lung =  extractGeneData("lung",gene_dict)
+    for key,value in lung.iteritems():
+        count = row_find[key]
+        if(value[0] >=1):
+            Matrix[count][2] = value[0]
+            Matrix[count][7] = ",".join(value[1:])
+        else:
+            Matrix[count][2] = 0
+            Matrix[count][7] = "NA"
+    gene_dict = reset_dict()
+    prostate = extractGeneData("prostate",gene_dict)
+    for key,value in prostate.iteritems():   
+        count = row_find[key]
+        if(value[0] >= 1):
+            Matrix[count][3] = value[0]
+            Matrix[count][8] = ",".join(value[1:])
+        else:
+            Matrix[count][3] = 0
+            Matrix[count][8] = "NA"    
+    gene_dict = reset_dict()
+    colon  = extractGeneData("colon",gene_dict)
+    for key,value in colon.iteritems():   
+        count = row_find[key]
+        if(value[0] >= 1):
+            Matrix[count][4] = value[0]
+            Matrix[count][9] = ",".join(value[1:])
+        else:
+            Matrix[count][4] = 0
+            Matrix[count][9] = "NA"
+    gene_dict = reset_dict()
+    panc  = extractGeneData("pancreatic",gene_dict)
+    for key,value in panc.iteritems():   
+        count = row_find[key]
+        if(value[0] >= 1):
+            Matrix[count][5] = value[0]
+            Matrix[count][10] = ",".join(value[1:])
+        else:
+            Matrix[count][5] = 0
+            Matrix[count][10] = "NA"
+    writecsv(Matrix) # write the result of the genes vs types matrix
     #readcsv() # if updating mongodb, genes file use this
-    print "Matrix Writtn....done"
+    print "Data analyzed and written to matrix.csv"
 
 
 if __name__ == "__main__":

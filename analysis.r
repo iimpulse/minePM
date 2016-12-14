@@ -8,7 +8,6 @@
 data = read.csv("~/develop/minePM/matrix.csv")
 #remove insignificant values
 data = data.frame(data[data$BladderCancer>=3 & data$LungCancer >=3 & data$ProstateCancer >=3 & data$ColonCancer >= 3 & data$PancreaticCancer >=3,])
-
 #################################################################
 # Creating dataframe of sum counts
 data.sum = apply(data[,2:6],1,sum) #Sum total Amounts
