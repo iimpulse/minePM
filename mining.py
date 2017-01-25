@@ -162,7 +162,7 @@ def main():
     miner.setMatrix(result[3],4,9)
     miner.setMatrix(result[4],5,10) 
     writecsv(miner.matrix) # write the result of the genes vs types matrix
-    #readcsv() # if updating mongodb, genes file use this
+    readcsv() # if updating mongodb, genes file use this
     print "Matrix Writtn....done"
 
 

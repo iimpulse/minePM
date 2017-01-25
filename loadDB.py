@@ -20,33 +20,31 @@ from datetime import date
 def updateDBdata(cancer):
 	client = MongoClient('mongodb://localhost:27017/')
 	db = client['minepm']
-	Entrez.email = "garganom@my.easternct.edu"    # Always tell NCBI who you are
+	Entrez.email = "gargano.mi@husky.neu.edu"    # Always tell NCBI who you are
 	if(cancer == "bladder"):
 		collection = db.bladdercancer
-		dir = './records/bc/'
+		dir = './data/bladder/'
 	elif(cancer == "lung"):
 		collection = db.lungcancer
-		dir = "./records/lc/"
+		dir = "./data/lung/"
 	elif(cancer == "prostate"):
 		collection = db.prostatecancer	
-		dir = "./records/pc/"
+		dir = "./data/prostate/"
 	elif(cancer == "colon"):
 		collection = db.coloncancer
-		dir = "./records/colc/"
+		dir = "./data/colon/"
 	elif(cancer == "pancreatic"):
 		collection = db.pancreaticcancer
-		dir = "./records/panc/"
+		dir = "./data/pancreatic/"
 	for f in os.listdir(dir):
 		handle = open(dir + f,'r')
-		records = Entrez.parse(handle)	
-		for x in records:	
+		records = Entrez.read(handle)
+		for x in records['PubmedArticle']:
 			try:
 				abstract = x['MedlineCitation']['Article']['Abstract']['AbstractText']
 				abstract = "".join(abstract)
 				pmid = x['MedlineCitation']['PMID']
 				title = x['MedlineCitation']['Article']['ArticleTitle']
-				
-				
 				author = []
 				for z in x['MedlineCitation']['Article']['AuthorList']:
 					try:
@@ -61,7 +59,7 @@ def updateDBdata(cancer):
 			except Exception,e:
 				continue
 	        handle.close()
-		os.remove(f)
+		os.remove(dir + f)
 	client.close()
 
 def main():
