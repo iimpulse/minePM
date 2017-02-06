@@ -21,5 +21,7 @@ Create Collections:
     
 
 Run Scripts In Order
-    
+fetch ( If you have not run this script before please comment line..17 and uncomment 19 )
+loadDB
+mining
   
