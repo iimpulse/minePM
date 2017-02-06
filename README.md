@@ -21,7 +21,7 @@ Create Collections:
     
 
 Run Scripts In Order
-fetch ( If you have not run this script before please comment line..17 and uncomment 19 )
+fetch.. if its your first time please use argument "all", otherwise use "update"
 loadDB
 mining
   
